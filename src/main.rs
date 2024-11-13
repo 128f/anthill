@@ -1,5 +1,5 @@
-use bevy::{log::tracing_subscriber::fmt::time, prelude::*};
-use rand;
+use bevy::{log::tracing_subscriber::fmt::time, prelude::*, transform::commands};
+use rand::{self, seq::SliceRandom};
 
 const DEFAULT_VELOCITY: f32 = 20.0;
 const DEFAULT_HEALTH: f32 = 5.0;
@@ -64,7 +64,7 @@ impl Ant {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
+        .add_systems(Startup, (setup_grid, setup_anthill))
         .add_systems(
             Update,
             (move_ant, spawn_ant, decay_ant, remove_ant, recolor_ant),
@@ -72,7 +72,38 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_grid(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    let texture = asset_server.load("ground.png");
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(25), 4, 4, None, None);
+    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+
+    for i in -50..50 {
+        for k in -50..50 {
+            let idx = rand::random::<usize>() % 4;
+            commands.spawn((
+                SpriteBundle {
+                    texture: texture.clone(),
+                    transform: Transform::from_translation(
+                        Vec2::new((i as f32) * 25.0, (k as f32) * 25.0).extend(0.0),
+                    ),
+                    ..Default::default()
+                },
+                TextureAtlas {
+                    layout: texture_atlas_layout.clone(),
+                    index: idx,
+                },
+            ));
+        }
+    }
+}
+
+// AntHill
+
+fn setup_anthill(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
     commands.spawn((
         SpriteBundle {
@@ -113,6 +144,8 @@ fn spawn_ant(mut commands: Commands, mut query: Query<&mut AntHill>, time: Res<T
         ant_hill.time_to_spawn -= time.delta_seconds();
     }
 }
+
+// Ant
 
 fn move_ant(mut query: Query<(&mut Transform, &Ant)>, time: Res<Time>) {
     for (mut transform, ant) in query.iter_mut() {
