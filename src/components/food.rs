@@ -9,7 +9,10 @@ pub struct Spawner {
 impl Spawner {
     pub fn new() -> Self {
         Self {
-            timer: Timer::from_seconds(FOOD_SPAWN_RATE, TimerMode::Repeating),
+            timer: Timer::from_seconds(
+                FOOD_SPAWN_RATE,
+                TimerMode::Repeating,
+            ),
         }
     }
 }

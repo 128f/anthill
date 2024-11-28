@@ -14,10 +14,21 @@ pub fn spawn_food(
         return;
     }
     let food = components::food::Food::random();
-    let path = format!("{}.png", food.get_sprite());
+    let path = format!(
+        "{}.png",
+        food.get_sprite()
+    );
     // TODO: preload this somewhere else
     let texture = asset_server.load(path);
-    let layout = TextureAtlasLayout::from_grid(UVec2::new(50, 30), 4, 1, None, None);
+    let layout = TextureAtlasLayout::from_grid(
+        UVec2::new(
+            50, 30,
+        ),
+        4,
+        1,
+        None,
+        None,
+    );
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     commands.spawn((

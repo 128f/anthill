@@ -13,7 +13,12 @@ fn main() {
         .add_plugins(HanabiPlugin)
         .add_systems(
             Startup,
-            (setup_camera, setup_grid, setup_anthill, setup_food_spawner),
+            (
+                setup_camera,
+                setup_grid,
+                setup_anthill,
+                setup_food_spawner,
+            ),
         )
         .add_systems(
             Update,
@@ -51,7 +56,13 @@ fn setup_grid(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let texture = asset_server.load("ground.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(25), 4, 4, None, None);
+    let layout = TextureAtlasLayout::from_grid(
+        UVec2::splat(25),
+        4,
+        4,
+        None,
+        None,
+    );
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     for i in -50..50 {
@@ -61,7 +72,11 @@ fn setup_grid(
                 SpriteBundle {
                     texture: texture.clone(),
                     transform: Transform::from_translation(
-                        Vec2::new((i as f32) * 25.0, (k as f32) * 25.0).extend(0.0),
+                        Vec2::new(
+                            (i as f32) * 25.0,
+                            (k as f32) * 25.0,
+                        )
+                        .extend(0.0),
                     ),
                     ..Default::default()
                 },
@@ -76,16 +91,25 @@ fn setup_grid(
 
 // AntHill
 
-fn setup_anthill(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_anthill(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
-                color: Color::srgb(1.0, 1.0, 1.0),
+                color: Color::srgb(
+                    1.0, 1.0, 1.0,
+                ),
                 ..Default::default()
             },
             transform: Transform {
-                scale: Vec3::new(5.0, 5.0, 1.0), // Size of the square
-                translation: Vec3::new(0.0, 0.0, 0.0),
+                scale: Vec3::new(
+                    5.0, 5.0, 1.0,
+                ), // Size of the square
+                translation: Vec3::new(
+                    0.0, 0.0, 0.0,
+                ),
                 ..Default::default()
             },
             ..default()

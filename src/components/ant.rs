@@ -20,7 +20,10 @@ pub struct Ant {
 }
 
 impl Ant {
-    pub fn new(heading: Vec2, velocity: f32) -> Self {
+    pub fn new(
+        heading: Vec2,
+        velocity: f32,
+    ) -> Self {
         Self {
             heading,
             velocity,
@@ -29,8 +32,11 @@ impl Ant {
         }
     }
     pub fn random() -> Self {
-        let heading =
-            Vec2::new(rand::random::<f32>() - 0.5, rand::random::<f32>() - 0.5).normalize();
+        let heading = Vec2::new(
+            rand::random::<f32>() - 0.5,
+            rand::random::<f32>() - 0.5,
+        )
+        .normalize();
         let velocity = DEFAULT_VELOCITY;
         Self {
             heading,
