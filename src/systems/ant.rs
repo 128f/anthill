@@ -55,7 +55,6 @@ pub fn remove_ant(
         Entity,
         &Ant,
     )>,
-    time: Res<Time>,
 ) {
     for (entity, ant) in query.iter_mut() {
         if ant.health <= 0.0 {

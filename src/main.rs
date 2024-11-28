@@ -1,4 +1,3 @@
-use bevy::render::texture::ImageLoaderSettings;
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_hanabi::prelude::*;
 use rand;
@@ -40,8 +39,8 @@ fn setup_food_spawner(mut commands: Commands) {
 
 fn setup_camera(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    // asset_server: Res<AssetServer>,
+    // mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     // Spawn a 2D camera
     let mut camera = Camera2dBundle::default();
@@ -93,7 +92,7 @@ fn setup_grid(
 
 fn setup_anthill(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    // asset_server: Res<AssetServer>,
 ) {
     commands.spawn((
         SpriteBundle {
