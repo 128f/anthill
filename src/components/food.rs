@@ -8,12 +8,12 @@ pub struct Spawner {
 
 impl Spawner {
     pub fn new() -> Self {
-        Self {
-            timer: Timer::from_seconds(
-                FOOD_SPAWN_RATE,
-                TimerMode::Repeating,
-            ),
-        }
+        let mut timer = Timer::from_seconds(
+            FOOD_SPAWN_RATE,
+            TimerMode::Repeating,
+        );
+        timer.set_elapsed(timer.duration());
+        Self { timer }
     }
 }
 
@@ -38,5 +38,15 @@ impl Food {
             2 => "marshmallow",
             _ => panic!("Invalid food index"),
         }
+    }
+
+    pub fn consume(
+        &mut self,
+        amount: f32,
+    ) -> f32 {
+        let consumed = amount.min(self.health);
+        self.health -= amount;
+        self.health = self.health.max(0.0);
+        consumed
     }
 }
