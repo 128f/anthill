@@ -12,10 +12,11 @@ pub fn remove_decayed_pheremones(
 ) {
     for (entity, pheremone) in query.iter() {
         if pheremone.strength <= 0.0 {
+            let id = entity.to_bits();
             commands.entity(entity).despawn_recursive();
             pheremone_data.remove(
                 pheremone.position,
-                0,
+                id,
             );
         }
     }

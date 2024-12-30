@@ -40,6 +40,10 @@ impl Food {
         }
     }
 
+    pub fn percentage_consumed(&self) -> f32 {
+        1.0 - self.health / DEFAULT_FOOD_HEALTH
+    }
+
     pub fn consume(
         &mut self,
         amount: f32,

@@ -5,6 +5,7 @@ use crate::consts::*;
 pub enum Behavior {
     Search,
     Return,
+    Follow,
 }
 
 #[derive(Component)]
@@ -86,12 +87,25 @@ impl Ant {
             .extend(0.0)
     }
 
+    pub fn set_searching(&mut self) {
+        self.behavior = Behavior::Search;
+    }
+
     pub fn set_returning(&mut self) {
         self.behavior = Behavior::Return;
     }
     pub fn is_returning(&self) -> bool {
         match self.behavior {
             Behavior::Return => true,
+            _ => false,
+        }
+    }
+    pub fn set_following(&mut self) {
+        self.behavior = Behavior::Follow;
+    }
+    pub fn is_following(&self) -> bool {
+        match self.behavior {
+            Behavior::Follow => true,
             _ => false,
         }
     }

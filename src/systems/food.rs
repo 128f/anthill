@@ -1,4 +1,5 @@
 use crate::components;
+use crate::components::food::Food;
 use crate::consts::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::ActiveCollisionTypes;
@@ -67,6 +68,9 @@ pub fn spawn_food(
             |parent| {
                 parent.spawn(
                     Text2dBundle {
+                        transform: Transform::from_xyz(
+                            0.0, 0.0, 3.0,
+                        ),
                         text: Text::from_section(
                             remaining_health.to_string(),
                             TextStyle {
@@ -83,6 +87,33 @@ pub fn spawn_food(
             },
         );
     // .insert(Food::random());
+}
+
+pub fn remove_depleted_food(
+    mut commands: Commands,
+    query: Query<(
+        Entity,
+        &Food,
+    )>,
+) {
+    for (entity, food) in query.iter() {
+        if food.health <= 0.0 {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
+pub fn update_food_texture(
+    mut query: Query<(
+        &mut TextureAtlas,
+        &Food,
+    )>
+) {
+    for (mut texture_atlas, food) in query.iter_mut() {
+        let consumed = food.percentage_consumed();
+        let index = (consumed * 4.0).floor() as usize;
+        texture_atlas.index = index;
+    }
 }
 
 pub fn update_food_text(

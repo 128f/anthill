@@ -29,10 +29,11 @@ pub fn apply_pheremones(
 ) {
     for (transform, mut ant) in query.iter_mut() {
         let closest = pheremone_data.find_closest(transform.translation.truncate());
-        if closest.is_none() {
+        if ant.is_returning() {
             continue;
         }
-        if ant.is_returning() {
+        if closest.is_none() {
+            ant.set_searching();
             continue;
         }
         let (_, entity_id) = closest.unwrap();
@@ -46,6 +47,7 @@ pub fn apply_pheremones(
                 "Pheremone Heading: {:?}",
                 pheremone.heading
             );
+            ant.set_following();
             ant.heading += pheremone.heading.normalize();
         } else {
             println!(
@@ -66,15 +68,19 @@ pub fn tilt_ant(
         if ant.lifetime % 0.2 > 0.05 {
             continue;
         }
-        if ant.is_returning() {
-            let heading = ant.home_direction(&transform.translation).normalize();
-            ant.heading = heading.truncate();
-        } else {
-            let random_angle = PI / 4.0 - PI / 2.0 * rand::random::<f32>();
-            ant.heading = Quat::from_rotation_z(random_angle)
-                .mul_vec3(ant.heading.extend(0.))
-                .truncate()
-                .normalize();
+        match ant.behavior {
+            Behavior::Search => {
+                let random_angle = PI / 4.0 - PI / 2.0 * rand::random::<f32>();
+                ant.heading = Quat::from_rotation_z(random_angle)
+                    .mul_vec3(ant.heading.extend(0.))
+                    .truncate()
+                    .normalize();
+            }
+            Behavior::Follow => {}
+            Behavior::Return => {
+                let heading = ant.home_direction(&transform.translation).normalize();
+                ant.heading = heading.truncate();
+            }
         }
     }
 }

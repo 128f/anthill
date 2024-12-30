@@ -34,8 +34,11 @@ fn main() {
             Update,
             (
                 systems::food::spawn_food,
+                systems::food::update_food_texture,
                 systems::food::update_food_text,
+                systems::food::remove_depleted_food,
                 systems::anthill::spawn_ant,
+                systems::anthill::update_anthill_text,
                 systems::ant::increment_lifetime,
                 systems::ant::tilt_ant,
                 systems::ant::apply_pheremones.after(systems::ant::tilt_ant),
@@ -45,7 +48,7 @@ fn main() {
                 systems::ant::decay_ant,
                 systems::ant::remove_ant,
                 systems::ant::recolor_ant,
-                systems::pheremone::decay_pheremones,
+                systems::pheremone::decay_pheremones.after(systems::ant::apply_pheremones),
                 systems::pheremone::remove_decayed_pheremones
                     .after(systems::pheremone::decay_pheremones),
                 detect_collisions,

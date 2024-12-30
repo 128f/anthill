@@ -1,6 +1,6 @@
 use crate::{
     components,
-    consts::{ANT_SPAWN_RATE, DEFAULT_HEALTH, INITIAL_ANTHILL_HEALTH},
+    consts::{ANT_SPAWN_RATE, DEFAULT_HEALTH, DEFAULT_VELOCITY, INITIAL_ANTHILL_HEALTH},
 };
 use bevy::{prelude::*, transform};
 use bevy_hanabi::prelude::*;
@@ -97,7 +97,7 @@ pub fn spawn_ant(
     trail_effect: ResMut<TrailEffect>,
     asset_server: Res<AssetServer>,
 ) {
-    let (mut ant_hill_location, mut ant_hill) = query.single_mut();
+    let (ant_hill_location, mut ant_hill) = query.single_mut();
     let effect = trail_effect.effect.clone();
     if ant_hill.health > DEFAULT_HEALTH && ant_hill.time_to_spawn <= 0.0 {
         ant_hill.health -= DEFAULT_HEALTH;
@@ -105,8 +105,6 @@ pub fn spawn_ant(
 
         let texture = asset_server.load("headingdebug.png");
 
-        // Spawn an instance of the particle effect, and override its Z layer to
-        // be above the reference white square previously spawned.
         commands
             .spawn((
                 ParticleEffectBundle {
@@ -127,7 +125,11 @@ pub fn spawn_ant(
                 //         .with_scale(Vec3::splat(1.0)),
                 //     ..Default::default()
                 // },
-                components::ant::Ant::random(ant_hill_location.translation.truncate()),
+                components::ant::Ant::new(
+                    ant_hill.get_initial_spawn_heading(),
+                    DEFAULT_VELOCITY,
+                    ant_hill_location.translation.truncate(),
+                ),
             ))
             .insert(Name::new("effect:2d"))
             .insert(
@@ -159,6 +161,31 @@ pub fn spawn_ant(
     }
 }
 
+pub fn reduce_anthill_bias(mut query: Query<&mut components::anthill::AntHill>) {
+    for mut ant_hill in query.iter_mut() {
+        ant_hill.reduce_bias();
+    }
+}
+
+pub fn update_anthill_text(
+    mut query: Query<(
+        &Children,
+        &components::anthill::AntHill,
+    )>,
+    mut text_query: Query<&mut Text>,
+) {
+    for (&ref children, &ref anthill) in query.iter_mut() {
+        for &child in children.iter() {
+            let mut text = text_query.get_mut(child).unwrap();
+            let formatted_health = format!(
+                "{:.0}",
+                anthill.health
+            );
+            text.sections[0].value = formatted_health;
+        }
+    }
+}
+
 // AntHill
 
 pub fn setup_anthill(
@@ -176,7 +203,7 @@ pub fn setup_anthill(
                 },
                 transform: Transform {
                     scale: Vec3::new(
-                        5.0, 5.0, 1.0,
+                        1.0, 1.0, 1.0,
                     ), // Size of the square
                     translation: Vec3::new(
                         0.0, 0.0, 0.0,
@@ -189,10 +216,32 @@ pub fn setup_anthill(
         ))
         .insert(
             Collider::cuboid(
-                1.0, 1.0,
+                5.0, 5.0,
             ),
         )
         .insert(Sensor)
         .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(ActiveCollisionTypes::all());
+        .insert(ActiveCollisionTypes::all())
+        .with_children(
+            |parent| {
+                parent.spawn(
+                    Text2dBundle {
+                        transform: Transform::from_xyz(
+                            0.0, 0.0, 3.0,
+                        ),
+                        text: Text::from_section(
+                            INITIAL_ANTHILL_HEALTH.to_string(),
+                            TextStyle {
+                                font_size: 20.0,
+                                color: Color::srgba(
+                                    1.0, 0.0, 1.0, 1.0,
+                                ),
+                                ..Default::default()
+                            },
+                        ),
+                        ..Default::default()
+                    },
+                );
+            },
+        );
 }
