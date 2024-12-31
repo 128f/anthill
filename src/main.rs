@@ -1,11 +1,7 @@
 use bevy::{ecs::event::EventIterator, prelude::*, render::camera::ScalingMode};
 use bevy_hanabi::prelude::*;
 use bevy_rapier2d::prelude::*;
-use components::{
-    ant::{self, Ant},
-    anthill::AntHill,
-    food::Food,
-};
+use components::{ant::Ant, anthill::AntHill, food::Food};
 use rand;
 
 pub mod components;
