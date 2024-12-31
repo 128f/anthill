@@ -4,7 +4,7 @@ use crate::components::ant::*;
 use crate::components::pheremone::Pheremone;
 use crate::consts::*;
 use crate::resources::pheremone::PheremoneData;
-use bevy::{prelude::*, sprite};
+use bevy::prelude::*;
 
 pub fn move_ant(
     mut query: Query<(
@@ -162,7 +162,7 @@ pub fn drop_pheremones(
         &Ant,
     )>,
     mut pheremone_data: ResMut<PheremoneData>,
-    mut asset_server: ResMut<AssetServer>,
+    asset_server: ResMut<AssetServer>,
 ) {
     for (transform, ant) in query.iter() {
         if ant.is_returning() && ant.food_location.is_some() {
