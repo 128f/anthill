@@ -1,4 +1,9 @@
+use bevy::ecs::event;
+use bevy::ui::UiImage;
+use bevy::window::PrimaryWindow;
 use bevy::{ecs::event::EventIterator, prelude::*, render::camera::ScalingMode};
+use bevy_asset_loader::prelude::*;
+// use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_hanabi::prelude::*;
 use bevy_rapier2d::prelude::*;
 use components::{
@@ -7,19 +12,41 @@ use components::{
     food::Food,
 };
 use rand;
+use resources::dropper::{DropRequest, FoodType, SelectedFood};
+use resources::textures::FoodTextures;
 
 pub mod components;
 pub mod consts;
 pub mod resources;
 pub mod systems;
 
+#[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
+enum GameState {
+    #[default]
+    Loading,
+    Running,
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .init_state::<GameState>()
+        .add_loading_state(
+            LoadingState::new(GameState::Loading)
+                .continue_to_state(GameState::Running)
+                .load_collection::<FoodTextures>(),
+        )
         .add_plugins(HanabiPlugin)
+        // .add_plugins(EguiPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugins(RapierDebugRenderPlugin::default())
+        // .add_plugins(RapierDebugRenderPlugin::default())
         .insert_resource(resources::pheremone::PheremoneData::new())
+        .insert_resource(
+            SelectedFood {
+                selected: FoodType::Bird,
+            },
+        )
+        .add_event::<DropRequest>()
         .add_systems(
             Startup,
             (
@@ -28,11 +55,15 @@ fn main() {
                 setup_grid,
                 systems::anthill::setup_anthill,
                 setup_food_spawner,
+                ui_setup,
             ),
         )
         .add_systems(
             Update,
             (
+                // ui_example_system,
+                toolbar_system,
+                mouse_button_input,
                 systems::food::spawn_food,
                 systems::food::update_food_texture,
                 systems::food::update_food_text,
@@ -52,13 +83,168 @@ fn main() {
                 systems::pheremone::remove_decayed_pheremones
                     .after(systems::pheremone::decay_pheremones),
                 detect_collisions,
-            ),
+            )
+                .run_if(in_state(GameState::Running)),
+        )
+        .add_systems(
+            Update,
+            (systems::anthill::reduce_anthill_bias).run_if(in_state(GameState::Running)),
         )
         .run();
 }
 
 fn setup_food_spawner(mut commands: Commands) {
     commands.spawn((components::food::Spawner::new(),));
+}
+
+#[derive(Component)]
+struct ToolBarButton {
+    food_type: FoodType,
+}
+
+pub fn ui_setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
+    commands.spawn(Camera2d);
+
+    // Load the image asset
+    let bird_icon = asset_server.load("../assets/icons/bird_icon.png");
+    let hotdog_icon = asset_server.load("../assets/icons/hotdog_icon.png");
+    let marshmallow_icon = asset_server.load("../assets/icons/marshmallow_icon.png");
+
+    commands
+        .spawn(
+            NodeBundle {
+                style: Style {
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    width: Val::Percent(30.0), // Full-width for the parent node
+                    height: Val::Percent(10.0), // Full-height for the parent node
+                    ..Default::default()
+                },
+
+                z_index: ZIndex::Global(59),
+                ..Default::default()
+            },
+        )
+        .with_children(
+            |parent| {
+                parent
+                    .spawn(
+                        ButtonBundle {
+                            style: Style {
+                                width: Val::Percent(100.0),  // Full-width for the parent node
+                                height: Val::Percent(100.0), // Full-height for the parent node
+                                ..Default::default()
+                            },
+                            image: UiImage::from(bird_icon),
+                            ..Default::default()
+                        },
+                    )
+                    .insert(
+                        ToolBarButton {
+                            food_type: FoodType::Bird,
+                        },
+                    );
+                parent
+                    .spawn(
+                        ButtonBundle {
+                            style: Style {
+                                width: Val::Percent(100.0),  // Full-width for the parent node
+                                height: Val::Percent(100.0), // Full-height for the parent node
+                                ..Default::default()
+                            },
+                            image: UiImage::from(hotdog_icon),
+                            ..Default::default()
+                        },
+                    )
+                    .insert(
+                        ToolBarButton {
+                            food_type: FoodType::Hotdog,
+                        },
+                    );
+                parent
+                    .spawn(
+                        ButtonBundle {
+                            style: Style {
+                                width: Val::Percent(100.0),  // Full-width for the parent node
+                                height: Val::Percent(100.0), // Full-height for the parent node
+                                ..Default::default()
+                            },
+                            image: UiImage::from(marshmallow_icon),
+                            ..Default::default()
+                        },
+                    )
+                    .insert(
+                        ToolBarButton {
+                            food_type: FoodType::Marshmallow,
+                        },
+                    );
+            },
+        );
+}
+
+fn toolbar_system(
+    mut interaction_query: Query<
+        (
+            &Interaction,
+            &ToolBarButton,
+        ),
+        (
+            Changed<Interaction>,
+            With<Button>,
+        ),
+    >,
+    mut current_selected: ResMut<SelectedFood>,
+) {
+    for (interaction, button) in interaction_query.iter_mut() {
+        match *interaction {
+            Interaction::Pressed => current_selected.selected = button.food_type.clone(),
+            Interaction::Hovered => {}
+            Interaction::None => {}
+        }
+    }
+}
+
+fn mouse_button_input(
+    buttons: Res<ButtonInput<MouseButton>>,
+    camera_query: Query<
+        (
+            &Camera,
+            &GlobalTransform,
+        ),
+        With<Camera>,
+    >,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+    mut event_writer: EventWriter<DropRequest>,
+    current_selected: Res<SelectedFood>,
+) {
+    if buttons.just_pressed(MouseButton::Left) {
+        if let Some(position) = q_windows.single().cursor_position() {
+            let (camera, camera_transform) = camera_query.single();
+            println!(
+                "Cursor is inside the primary window, at {:?}",
+                position
+            );
+            let world_pos = camera.viewport_to_world_2d(
+                camera_transform,
+                position,
+            );
+            if world_pos.is_none() {
+                // log::warn!("Cursor is outside the camera's view");
+                return;
+            }
+            let world_pos = world_pos.unwrap();
+            event_writer.send(
+                DropRequest {
+                    position: world_pos,
+                    food_type: current_selected.selected.clone(),
+                },
+            );
+        }
+        println!("Left mouse button pressed");
+    }
 }
 
 fn setup_camera(

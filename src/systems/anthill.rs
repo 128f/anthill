@@ -161,9 +161,15 @@ pub fn spawn_ant(
     }
 }
 
-pub fn reduce_anthill_bias(mut query: Query<&mut components::anthill::AntHill>) {
-    for mut ant_hill in query.iter_mut() {
-        ant_hill.reduce_bias();
+pub fn reduce_anthill_bias(
+    mut query: Query<(
+        &Children,
+        &mut components::anthill::AntHill,
+    )>,
+    time: Res<Time>,
+) {
+    for (_, mut ant_hill) in query.iter_mut() {
+        ant_hill.reduce_bias(time.delta_seconds());
     }
 }
 

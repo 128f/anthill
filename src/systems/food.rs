@@ -1,6 +1,7 @@
 use crate::components;
 use crate::components::food::Food;
 use crate::consts::*;
+use crate::resources;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::ActiveCollisionTypes;
 use bevy_rapier2d::prelude::ActiveEvents;
@@ -9,49 +10,37 @@ use bevy_rapier2d::prelude::Sensor;
 
 pub fn spawn_food(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    mut food_spawner: Query<&mut components::food::Spawner>,
-    time: Res<Time>,
+    // mut food_spawner: Query<&mut components::food::Spawner>,
+    food_textures: Res<resources::textures::FoodTextures>,
+    mut event_reader: EventReader<resources::dropper::DropRequest>,
+    // time: Res<Time>,
 ) {
-    let mut spawner = food_spawner.single_mut();
-    if !spawner.timer.tick(time.delta()).just_finished() {
+    // let mut spawner = food_spawner.single_mut();
+    // if !spawner.timer.tick(time.delta()).just_finished() {
+    //     return;
+    // }
+    let event = event_reader.read().next();
+    if event.is_none() {
         return;
     }
-    let food = components::food::Food::random();
-    let path = format!(
-        "{}.png",
-        food.get_sprite()
-    );
-    // TODO: preload this somewhere else
-    let texture = asset_server.load(path);
-    let layout = TextureAtlasLayout::from_grid(
-        UVec2::new(
-            50, 30,
-        ),
-        4,
-        1,
-        None,
-        None,
-    );
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+    let event = event.unwrap();
+    let food = components::food::Food::from_enum(event.food_type.clone());
 
     let remaining_health = food.health;
-
     commands
         .spawn((
             SpriteBundle {
-                texture: texture.clone(),
+                texture: food_textures.get_texture(food.get_sprite()).clone(),
                 transform: Transform::from_xyz(
-                    rand::random::<f32>() * FOOD_SPAWN_WIDTH - FOOD_SPAWN_WIDTH / 2.0,
-                    rand::random::<f32>() * FOOD_SPAWN_HEIGHT - FOOD_SPAWN_HEIGHT / 2.0,
+                    event.position.x,
+                    event.position.y,
                     2.0,
                 )
                 .with_scale(Vec3::splat(1.0)),
                 ..Default::default()
             },
             TextureAtlas {
-                layout: texture_atlas_layout.clone(),
+                layout: food_textures.food_layout.clone(),
                 index: 0,
             },
             food,
@@ -86,7 +75,6 @@ pub fn spawn_food(
                 );
             },
         );
-    // .insert(Food::random());
 }
 
 pub fn remove_depleted_food(

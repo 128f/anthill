@@ -1,4 +1,4 @@
-use crate::consts::*;
+use crate::{consts::*, resources::dropper::FoodType};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -20,23 +20,29 @@ impl Spawner {
 #[derive(Component)]
 pub struct Food {
     pub health: f32,
-    pub index: usize,
+    pub food_type: FoodType,
 }
 
 impl Food {
-    pub fn random() -> Self {
+    // pub fn random() -> Self {
+    //     Self {
+    //         health: DEFAULT_FOOD_HEALTH,
+    //         food_type: rand::random::<usize>() % 3,
+    //     }
+    // }
+
+    pub fn from_enum(food_type: FoodType) -> Self {
         Self {
             health: DEFAULT_FOOD_HEALTH,
-            index: rand::random::<usize>() % 3,
+            food_type,
         }
     }
 
     pub fn get_sprite(&self) -> &str {
-        match self.index {
-            0 => "bird",
-            1 => "hotdog",
-            2 => "marshmallow",
-            _ => panic!("Invalid food index"),
+        match self.food_type {
+            FoodType::Bird => "bird",
+            FoodType::Hotdog => "hotdog",
+            FoodType::Marshmallow => "marshmallow",
         }
     }
 

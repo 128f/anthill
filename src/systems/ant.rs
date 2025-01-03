@@ -37,23 +37,23 @@ pub fn apply_pheremones(
             continue;
         }
         let (_, entity_id) = closest.unwrap();
-        println!(
-            "looking up {}",
-            entity_id
-        );
+        // println!(
+        //     "looking up {}",
+        //     entity_id
+        // );
         if let Ok(pheremone) = pheremone_query.get(Entity::from_bits(entity_id)) {
-            println!("Found pheremone");
-            println!(
-                "Pheremone Heading: {:?}",
-                pheremone.heading
-            );
+            // println!("Found pheremone");
+            // println!(
+            //     "Pheremone Heading: {:?}",
+            //     pheremone.heading
+            // );
             ant.set_following();
             ant.heading += pheremone.heading.normalize();
         } else {
-            println!(
-                "Failed to lookup pheremone {}",
-                Entity::from_bits(entity_id)
-            );
+            // println!(
+            //     "Failed to lookup pheremone {}",
+            //     Entity::from_bits(entity_id)
+            // );
         }
     }
 }
@@ -150,7 +150,7 @@ pub fn remove_ant(
 ) {
     for (entity, ant) in query.iter_mut() {
         if ant.health <= 0.0 {
-            commands.entity(entity).despawn();
+            commands.entity(entity).despawn_recursive();
         }
     }
 }
@@ -162,7 +162,7 @@ pub fn drop_pheremones(
         &Ant,
     )>,
     mut pheremone_data: ResMut<PheremoneData>,
-    mut asset_server: ResMut<AssetServer>,
+    // asset_server: ResMut<AssetServer>,
 ) {
     for (transform, ant) in query.iter() {
         if ant.is_returning() && ant.food_location.is_some() {
@@ -171,25 +171,17 @@ pub fn drop_pheremones(
                 transform.translation.truncate(),
                 -direction.truncate(),
             );
-            let texture = asset_server.load("pheremonedebug.png");
+            // let texture = asset_server.load("pheremonedebug.png");
             let mut sprite_location = transform.translation.truncate().extend(0.0);
             sprite_location.z += 100.0;
             let spawned_entity = commands.spawn((
-                SpriteBundle {
-                    texture,
-                    transform: Transform::from_translation(sprite_location),
-                    ..Default::default()
-                },
+                // SpriteBundle {
+                //     texture,
+                //     transform: Transform::from_translation(sprite_location),
+                //     ..Default::default()
+                // },
                 pheremone,
             ));
-            println!(
-                "Placed Pheremone Entity: {:?}",
-                spawned_entity.id()
-            );
-            // println!(
-            //     "Placing pheremone at {:?}",
-            //     transform.translation
-            // );
             pheremone_data.insert(
                 spawned_entity.id().to_bits(),
                 transform.translation.truncate(),

@@ -23,8 +23,11 @@ impl AntHill {
         }
     }
 
-    pub fn reduce_bias(&mut self) {
-        self.spawn_bias *= 0.9;
+    pub fn reduce_bias(
+        &mut self,
+        delta: f32,
+    ) {
+        self.spawn_bias *= 1.0 - delta;
     }
 
     pub fn return_ant(
