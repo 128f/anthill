@@ -2,7 +2,7 @@ use crate::{
     components,
     consts::{ANT_SPAWN_RATE, DEFAULT_HEALTH, DEFAULT_VELOCITY, INITIAL_ANTHILL_HEALTH},
 };
-use bevy::{prelude::*, transform};
+use bevy::prelude::*;
 use bevy_hanabi::prelude::*;
 use bevy_rapier2d::prelude::{ActiveCollisionTypes, ActiveEvents, Collider, Sensor};
 

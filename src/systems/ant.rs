@@ -4,7 +4,7 @@ use crate::components::ant::*;
 use crate::components::pheremone::Pheremone;
 use crate::consts::*;
 use crate::resources::pheremone::PheremoneData;
-use bevy::{prelude::*, sprite};
+use bevy::prelude::*;
 
 pub fn move_ant(
     mut query: Query<(

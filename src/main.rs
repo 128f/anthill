@@ -6,11 +6,7 @@ use bevy_asset_loader::prelude::*;
 // use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_hanabi::prelude::*;
 use bevy_rapier2d::prelude::*;
-use components::{
-    ant::{self, Ant},
-    anthill::AntHill,
-    food::Food,
-};
+use components::{ant::Ant, anthill::AntHill, food::Food};
 use rand;
 use resources::dropper::{DropRequest, FoodType, SelectedFood};
 use resources::textures::FoodTextures;
